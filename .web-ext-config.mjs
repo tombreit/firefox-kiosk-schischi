@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   ignoreFiles: [
     "README.md",
     ".gitlab-ci.yml",

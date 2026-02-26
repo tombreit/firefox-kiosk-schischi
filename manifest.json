@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Firefox Kiosk Schischi",
-  "version": "1.3",
+  "version": "1.4",
   "description": "Navigation buttons for Firefox kiosk mode",
   "categories": { "firefox": ["kiosk"] },
   "requires_payment": false,
