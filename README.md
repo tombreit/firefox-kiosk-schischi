@@ -85,6 +85,10 @@ The signing step requires two CI/CD variables to be set in GitLab
 | `WEB_EXT_API_KEY` | JWT issuer from [addons.mozilla.org API credentials](https://addons.mozilla.org/developers/addon/api/key/) |
 | `WEB_EXT_API_SECRET` | JWT secret from the same page |
 
+For listed AMO submissions, CI passes `amo-metadata.json` to `web-ext sign`.
+That file currently sets `version.license` to `MPL-2.0`, which avoids AMO API
+errors like "version.license is required".
+
 When `main` is built, CI publishes the signed `firefox-kiosk-schischi.xpi`.
 
 Updates are handled by AMO directly once users install the extension from AMO.
