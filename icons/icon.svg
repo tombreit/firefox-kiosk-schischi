@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <!-- toolbar background -->
+  <rect width="48" height="48" rx="8" fill="#f0f0f4"/>
+  <rect x="3" y="3" width="42" height="10" rx="3" fill="#cfcfd8"/>
+  <!-- back arrow -->
+  <path d="M10 8 L7 11 L10 14" stroke="#1c1b22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- forward arrow -->
+  <path d="M15 8 L18 11 L15 14" stroke="#1c1b22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- home icon -->
+  <path d="M22 13 L25 10 L28 13 L28 15 L26 15 L26 14 L24 14 L24 15 L22 15 Z" fill="#1c1b22"/>
+  <!-- url bar -->
+  <rect x="31" y="8" width="14" height="6" rx="2" fill="#e8e8ed"/>
+  <!-- page content lines -->
+  <rect x="3" y="17" width="42" height="3" rx="1.5" fill="#cfcfd8"/>
+  <rect x="3" y="23" width="36" height="3" rx="1.5" fill="#cfcfd8"/>
+  <rect x="3" y="29" width="40" height="3" rx="1.5" fill="#cfcfd8"/>
+  <rect x="3" y="35" width="30" height="3" rx="1.5" fill="#cfcfd8"/>
+</svg>

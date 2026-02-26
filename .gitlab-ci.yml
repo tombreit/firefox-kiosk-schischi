@@ -1,0 +1,25 @@
+stages:
+  - build
+  - deploy
+
+build-xpi:
+  stage: build
+  image: python:3-slim
+  script:
+    - python3 build.py
+  artifacts:
+    name: firefox-kiosk-schischi
+    paths:
+      - public/firefox-kiosk-schischi.xpi
+    expire_in: 30 days
+
+pages:
+  stage: deploy
+  image: python:3-slim
+  script:
+    - python3 build.py
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

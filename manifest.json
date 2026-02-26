@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Firefox Kiosk Schischi",
+  "version": "1.2",
+  "description": "Navigation buttons for Firefox kiosk mode",
+  "permissions": [
+    "browserSettings"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "icons": {
+    "48": "icons/icon.svg",
+    "96": "icons/icon.svg"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "css": [
+        "content/style.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "firefox-kiosk-schischi@csl.mpg.de",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}
