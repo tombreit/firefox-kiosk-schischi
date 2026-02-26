@@ -6,11 +6,12 @@
   "categories": { "firefox": ["kiosk"] },
   "requires_payment": false,
   "homepage": {
-    "en-US": "https://gitlab.gwdg.de/t.breitner/firefox-kiosk-schischi",
+    "en-US": "https://gitlab.gwdg.de/t.breitner/firefox-kiosk-schischi"
   },
   "incognito": "spanning",
   "permissions": [
-    "browserSettings"
+    "browserSettings",
+    "storage"
   ],
   "host_permissions": [
     "<all_urls>"

@@ -2,8 +2,10 @@ export default {
   ignoreFiles: [
     "README.md",
     ".gitlab-ci.yml",
-    ".web-ext-config.js",
+    ".web-ext-config.mjs",
     "public",
     "web-ext-artifacts",
+    "package-lock.json",
+    "package.json",
   ],
 };
