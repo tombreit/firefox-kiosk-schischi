@@ -3,6 +3,7 @@
   "name": "Firefox Kiosk Schischi",
   "version": "1.2",
   "description": "Navigation buttons for Firefox kiosk mode",
+  "incognito": "spanning",
   "permissions": [
     "browserSettings"
   ],
