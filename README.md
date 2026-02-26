@@ -18,7 +18,7 @@ This extension re-adds a compact top toolbar without obstructing page content.
 Requires [web-ext](https://github.com/mozilla/web-ext):
 
 ```bash
-npm install --global web-ext
+npm install
 web-ext lint        # check for errors
 web-ext build       # → web-ext-artifacts/firefox_kiosk_schischi-*.zip
 ```
@@ -34,6 +34,12 @@ npm install
 ```
 
 A pre-commit hook runs `npx web-ext lint` and blocks commits when lint fails.
+
+### Test locally
+
+```bash
+npx web-ext run
+```
 
 ## Installation
 
