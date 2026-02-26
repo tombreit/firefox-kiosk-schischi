@@ -43,7 +43,6 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "firefox-kiosk-schischi@csl.mpg.de",
-      "update_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/updates.json",
       "data_collection_permissions": {
         "required": [
           "none"

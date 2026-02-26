@@ -1,4 +1,11 @@
 {
+  "scripts": {
+    "lint": "web-ext lint",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  },
   "dependencies": {
     "web-ext": "^9.3.0"
   }
