@@ -1,11 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Kiosk Schischi",
-  "version": "1.9",
+  "version": "2.3.0-d9b2513",
   "author": "Thomas Breitner",
   "description": "Navigation buttons for Firefox kiosk mode",
-  "categories": { "firefox": ["kiosk"] },
-  "requires_payment": false,
   "homepage": {
     "en-US": "https://gitlab.gwdg.de/t.breitner/firefox-kiosk-schischi"
   },
