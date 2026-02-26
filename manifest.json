@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Kiosk Schischi",
-  "version": "1.6",
+  "version": "1.7",
   "author": "Thomas Breitner",
   "description": "Navigation buttons for Firefox kiosk mode",
   "categories": { "firefox": ["kiosk"] },
@@ -43,12 +43,12 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "firefox-kiosk-schischi@csl.mpg.de",
+      "update_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/updates.json",
       "data_collection_permissions": {
         "required": [
           "none"
         ]
-      },
-      "update_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/updates.json"
+      }
     }
   }
 }
