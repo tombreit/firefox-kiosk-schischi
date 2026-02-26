@@ -12,7 +12,9 @@
   "incognito": "spanning",
   "permissions": [
     "browserSettings",
-    "storage"
+    "storage",
+    "tabs",
+    "webNavigation"
   ],
   "host_permissions": [
     "<all_urls>"
