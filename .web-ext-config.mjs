@@ -7,5 +7,6 @@ export default {
     "web-ext-artifacts",
     "package-lock.json",
     "package.json",
+    "node_modules",
   ],
 };
