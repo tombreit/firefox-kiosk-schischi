@@ -23,6 +23,26 @@ python3 build.py
 # → public/firefox-kiosk-schischi.xpi
 ```
 
+## Installation
+
+The extension must be deployed via an [Enterprise Policy](https://support.mozilla.org/en-US/kb/customizing-firefox-using-policy-file)
+to bypass the signature requirement.
+
+Create `/etc/firefox-esr/policies/policies.json` on the target machine:
+
+```json
+{
+  "policies": {
+    "ExtensionSettings": {
+      "firefox-kiosk-schischi@csl.mpg.de": {
+        "installation_mode": "force_installed",
+        "install_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/firefox-kiosk-schischi.xpi"
+      }
+    }
+  }
+}
+```
+
 ## Usage
 
 ```bash
