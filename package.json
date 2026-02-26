@@ -1,10 +1,6 @@
 {
-  "type": "module",
   "scripts": {
-    "version": "node ./scripts/sync-version.mjs",
-    "lint": "node ./scripts/sync-version.mjs --lint",
-    "build": "npm run version && web-ext build --artifacts-dir dist --filename firefox-kiosk-schischi.xpi",
-    "sign": "web-ext sign --channel=listed --amo-metadata=amo-metadata.json --api-key=\"$WEB_EXT_API_KEY\" --api-secret=\"$WEB_EXT_API_SECRET\" --artifacts-dir dist",
+    "lint": "web-ext lint",
     "prepare": "husky"
   },
   "devDependencies": {

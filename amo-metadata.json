@@ -5,7 +5,6 @@
   "summary": {
     "en-US": "Navigation buttons for Firefox kiosk mode"
   },
-  "requires_payment": false,
   "categories": {
     "firefox": [
       "other"

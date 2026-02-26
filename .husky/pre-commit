@@ -1,3 +1,2 @@
 #!/usr/bin/env sh
-# run the version-aware lint script, but don't bump the counter
-npm run lint
+npx web-ext lint
