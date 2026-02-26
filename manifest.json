@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Firefox Kiosk Schischi",
+  "name": "Kiosk Schischi",
   "version": "1.4",
+  "author": "Thomas Breitner",
   "description": "Navigation buttons for Firefox kiosk mode",
   "categories": { "firefox": ["kiosk"] },
   "requires_payment": false,
