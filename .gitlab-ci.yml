@@ -42,16 +42,20 @@ sign-xpi:
 
 publish-xpi:
   stage: publish
-  image: alpine:latest
+  image: node:lts-slim
   needs:
     - job: sign-xpi
       artifacts: true
   script:
     - mkdir -p public
+    - VERSION=$(node -p "require('./manifest.json').version")
+    - UPDATE_LINK="${CI_PAGES_URL}/firefox-kiosk-schischi.xpi"
+    - node -e "const fs=require('fs'); const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8')); const addonId=manifest.browser_specific_settings.gecko.id; const version=process.env.VERSION; const updateLink=process.env.UPDATE_LINK; const updates={addons:{[addonId]:{updates:[{version, update_link:updateLink}]}}}; fs.writeFileSync('public/updates.json', JSON.stringify(updates, null, 2) + '\n');"
     - cp dist/firefox-kiosk-schischi.xpi public/firefox-kiosk-schischi.xpi
   artifacts:
     paths:
       - public/firefox-kiosk-schischi.xpi
+      - public/updates.json
   only:
     - main
 

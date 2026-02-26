@@ -47,7 +47,8 @@
         "required": [
           "none"
         ]
-      }
+      },
+      "update_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/updates.json"
     }
   }
 }

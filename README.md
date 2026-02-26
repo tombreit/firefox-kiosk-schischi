@@ -44,7 +44,8 @@ Policy file location (create the directory if it does not exist, regardless of F
       "firefox-kiosk-schischi@csl.mpg.de": {
         "private_browsing": true,
         "installation_mode": "force_installed",
-        "install_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/firefox-kiosk-schischi.xpi"
+        "install_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/firefox-kiosk-schischi.xpi",
+        "updates_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/updates.json"
       }
     }
   }
@@ -71,6 +72,15 @@ The signing step requires two CI/CD variables to be set in GitLab
 (**Settings → CI/CD → Variables**, mark both as masked):
 
 | Variable | Description |
-|---|---|
+| --- | --- |
 | `WEB_EXT_API_KEY` | JWT issuer from [addons.mozilla.org API credentials](https://addons.mozilla.org/developers/addon/api/key/) |
 | `WEB_EXT_API_SECRET` | JWT secret from the same page |
+
+When `main` is built, CI now also publishes:
+
+- `firefox-kiosk-schischi.xpi`
+- `updates.json` (self-hosted update manifest for unlisted AMO updates)
+
+`updates.json` always points to the latest signed artifact and uses the version from
+`manifest.json`. You need to bump `manifest.json` manually before each new AMO signing
+submission, because AMO rejects duplicate versions.
