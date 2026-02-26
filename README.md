@@ -11,30 +11,38 @@ This extension re-adds a compact top toolbar without obstructing page content.
 - Back / Home / Forward buttons, always visible
 - Back and Forward buttons are greyed out when there is no history in that direction
 - Read-only URL bar showing the current page address
-- Right-click context menu suppressed (belt-and-suspenders with `--kiosk`)
 - No user-configurable settings — uses the homepage set in Firefox preferences
 
 ## Build
 
-Requires Python 3 (no dependencies beyond the standard library).
+Requires [web-ext](https://github.com/mozilla/web-ext):
 
 ```bash
-python3 build.py
-# → public/firefox-kiosk-schischi.xpi
+npm install --global web-ext
+web-ext lint        # check for errors
+web-ext build       # → web-ext-artifacts/firefox_kiosk_schischi-*.zip
 ```
+
+...or just zip to an `foo.xpi` file.
 
 ## Installation
 
-The extension must be deployed via an [Enterprise Policy](https://support.mozilla.org/en-US/kb/customizing-firefox-using-policy-file)
-to bypass the signature requirement.
+### Deploy via Enterprise Policy
 
-Create `/etc/firefox-esr/policies/policies.json` on the target machine:
+The extension can be deployed via an [Enterprise Policy](https://support.mozilla.org/en-US/kb/customizing-firefox-using-policy-file).
+
+Policy file location (create the directory if it does not exist, regardless of Firefox or Firefox-ESR):
+
+```txt
+/etc/firefox/policies/policies.json
+```
 
 ```json
 {
   "policies": {
     "ExtensionSettings": {
       "firefox-kiosk-schischi@csl.mpg.de": {
+        "private_browsing": true,
         "installation_mode": "force_installed",
         "install_url": "https://firefox-kiosk-schischi-e944d5.pages.gwdg.de/firefox-kiosk-schischi.xpi"
       }
@@ -42,6 +50,8 @@ Create `/etc/firefox-esr/policies/policies.json` on the target machine:
   }
 }
 ```
+
+Verify the policy is active by opening `about:policies` in Firefox.
 
 ## Usage
 
@@ -51,5 +61,16 @@ firefox-esr --kiosk https://your-start-page.example.com
 
 ## CI/CD
 
-The GitLab CI pipeline (`.gitlab-ci.yml`) builds the XPI on every push and publishes
-it to GitLab Pages on the `main` branch.
+The GitLab CI pipeline (`.gitlab-ci.yml`) has three stages:
+
+1. **build** — builds an unsigned `.xpi` as a downloadable artifact on every push
+2. **sign** — signs the extension via Mozilla's AMO API using `web-ext` (`main` branch only)
+3. **deploy** — publishes the signed `.xpi` and `index.html` to GitLab Pages (`main` branch only)
+
+The signing step requires two CI/CD variables to be set in GitLab
+(**Settings → CI/CD → Variables**, mark both as masked):
+
+| Variable | Description |
+|---|---|
+| `WEB_EXT_API_KEY` | JWT issuer from [addons.mozilla.org API credentials](https://addons.mozilla.org/developers/addon/api/key/) |
+| `WEB_EXT_API_SECRET` | JWT secret from the same page |

@@ -1,23 +1,69 @@
 stages:
   - build
+  - sign
+  - publish
   - deploy
 
-build-xpi:
+lint:
   stage: build
-  image: python:3-slim
+  image: node:lts-slim
   script:
-    - python3 build.py
+    - npm install --global web-ext
+    - web-ext lint
+
+build:
+  stage: build
+  image: node:lts-slim
+  needs: [lint]
+  script:
+    - npm install --global web-ext
+    - web-ext build --artifacts-dir dist --filename firefox-kiosk-schischi.xpi
   artifacts:
-    name: firefox-kiosk-schischi
+    name: firefox-kiosk-schischi-unsigned
+    paths:
+      - dist/firefox-kiosk-schischi.xpi
+    expire_in: 30 days
+
+sign-xpi:
+  stage: sign
+  image: node:lts-slim
+  needs: [lint]
+  script:
+    - npm install --global web-ext
+    - VERSION=$(node -p "require('./manifest.json').version")
+    - web-ext sign --channel=unlisted --api-key="$WEB_EXT_API_KEY" --api-secret="$WEB_EXT_API_SECRET" --artifacts-dir dist
+    - mv "dist/firefox_kiosk_schischi-${VERSION}.xpi" dist/firefox-kiosk-schischi.xpi
+  artifacts:
+    name: firefox-kiosk-schischi-signed
+    paths:
+      - dist/firefox-kiosk-schischi.xpi
+    expire_in: 30 days
+  only:
+    - main
+
+publish-xpi:
+  stage: publish
+  image: alpine:latest
+  needs:
+    - job: sign-xpi
+      artifacts: true
+  script:
+    - mkdir -p public
+    - cp dist/firefox-kiosk-schischi.xpi public/firefox-kiosk-schischi.xpi
+  artifacts:
     paths:
       - public/firefox-kiosk-schischi.xpi
-    expire_in: 30 days
+  only:
+    - main
 
 pages:
   stage: deploy
-  image: python:3-slim
+  image: alpine:latest
+  needs:
+    - job: publish-xpi
+      artifacts: true
   script:
-    - python3 build.py
+    - cp index.html public/
   artifacts:
     paths:
       - public
