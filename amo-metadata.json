@@ -1,4 +1,15 @@
 {
+  "name": {
+    "en-US": "Kiosk Schischi"
+  },
+  "summary": {
+    "en-US": "Navigation buttons for Firefox kiosk mode"
+  },
+  "categories": {
+    "firefox": [
+      "kiosk"
+    ]
+  },
   "version": {
     "license": "MPL-2.0"
   }
