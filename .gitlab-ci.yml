@@ -9,7 +9,7 @@ lint:
   image: node:lts-slim
   script:
     - npm install
-    - npx web-ext lint
+    - npm run lint
 
 build:
   stage: build
@@ -17,7 +17,8 @@ build:
   needs: [lint]
   script:
     - npm install
-    - npx web-ext build --artifacts-dir dist --filename firefox-kiosk-schischi.xpi
+    - npm run version
+    - npm run build
   artifacts:
     name: firefox-kiosk-schischi-unsigned
     paths:
@@ -30,7 +31,7 @@ sign-xpi:
   needs: [lint]
   script:
     - npm install
-    - npx web-ext sign --channel=listed --amo-metadata=amo-metadata.json --api-key="$WEB_EXT_API_KEY" --api-secret="$WEB_EXT_API_SECRET" --artifacts-dir dist
+    - npm run sign
     - mv dist/*.xpi dist/firefox-kiosk-schischi.xpi
   artifacts:
     name: firefox-kiosk-schischi-signed

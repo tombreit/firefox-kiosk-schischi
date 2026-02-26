@@ -95,8 +95,40 @@ For listed AMO submissions, CI passes `amo-metadata.json` to `web-ext sign`.
 That file currently sets `version.license` to `MPL-2.0`, which avoids AMO API
 errors like "version.license is required".
 
-When `main` is built, CI publishes the signed `firefox-kiosk-schischi.xpi`.
+### Automated versioning
 
-Updates are handled by AMO directly once users install the extension from AMO.
-You still need to bump `manifest.json` manually before each new AMO signing
-submission, because AMO rejects duplicate versions.
+The extension now uses a small helper script (`scripts/sync-version.mjs`) to
+keep the `manifest.json` version field in sync with a simple counter and the
+current Git commit.  The manifest contains a placeholder (`"__VERSION__"`) in
+source control; the script replaces it with a generated string before building
+or signing.
+
+The scheme is **`MAJOR.increment.0-<short-git-hash>`**.  The major number is
+hard‑coded in the script (currently `2`); the increment is stored in
+`version.json` and automatically increased every time the version script runs
+(typically during the CI build/sign stages).  A count of `0` produces
+`2.1.0-abcdef1` for example.  Running the script locally will also bump the
+counter, so make sure to commit both `manifest.json` and `version.json`
+after a release.
+
+You can inspect or compute a version without changing files with
+`node ./scripts/sync-version.mjs --dry-run`.
+
+Linting uses `npm run lint`, which invokes the script with `--lint`.  This
+mode temporarily substitutes a valid version into the manifest just for the
+`web-ext lint` invocation, so `VERSION_FORMAT_INVALID` warnings are avoided.
+
+### Using the new commands
+
+```bash
+npm run lint       # lint the extension (does not increment)
+npm run version    # bump counter, update manifest, print version
+npm run build      # generate a signed XPI (versioned)
+npm run sign       # sign an existing build (version already bumped)
+```
+
+The CI configuration has been updated to call `npm run version` before building
+and signing; manual version bumps are therefore no longer necessary.
+
+Updates are still handled by AMO once users install the extension; the
+script only ensures each submission has a unique, incrementing version.
