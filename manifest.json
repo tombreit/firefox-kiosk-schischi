@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Kiosk Schischi",
-  "version": "2.3.0-d9b2513",
+  "version": "2.3.0",
   "author": "Thomas Breitner",
   "description": "Navigation buttons for Firefox kiosk mode",
   "homepage": {
