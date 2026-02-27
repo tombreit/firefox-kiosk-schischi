@@ -16,6 +16,74 @@ async function refreshHomepage() {
 refreshHomepage();
 
 const tabNavState = new Map();
+const tabHomeUrl = new Map(); // tabId -> startup URL (kiosk launch URL)
+const TAB_HOME_KEY_PREFIX = "tabHomeUrl:";
+
+function tabHomeStorageKey(tabId) {
+    return `${TAB_HOME_KEY_PREFIX}${tabId}`;
+}
+
+async function persistTabHomeUrl(tabId, url) {
+    try {
+        await browser.storage.session.set({ [tabHomeStorageKey(tabId)]: url });
+    } catch {
+        // best-effort only
+    }
+}
+
+async function removePersistedTabHomeUrl(tabId) {
+    try {
+        await browser.storage.session.remove(tabHomeStorageKey(tabId));
+    } catch {
+        // best-effort only
+    }
+}
+
+async function getPersistedTabHomeUrl(tabId) {
+    try {
+        const key = tabHomeStorageKey(tabId);
+        const result = await browser.storage.session.get(key);
+        const url = result[key];
+        return isUsableHomeUrl(url) ? url : null;
+    } catch {
+        return null;
+    }
+}
+
+function isUsableHomeUrl(url) {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return !(
+        lower === "about:blank"
+        || lower.startsWith("about:")
+        || lower.startsWith("moz-extension:")
+        || lower.startsWith("blob:")
+        || lower.startsWith("data:")
+        || lower.startsWith("javascript:")
+    );
+}
+
+function rememberTabHomeUrl(tabId, url) {
+    if (tabId < 0) return;
+    if (tabHomeUrl.has(tabId)) return;
+    if (!isUsableHomeUrl(url)) return;
+    tabHomeUrl.set(tabId, url);
+    persistTabHomeUrl(tabId, url);
+}
+
+async function seedTabHomeUrlsFromOpenTabs() {
+    try {
+        const tabs = await browser.tabs.query({});
+        for (const tab of tabs) {
+            if (typeof tab.id !== "number") continue;
+            rememberTabHomeUrl(tab.id, tab.url);
+        }
+    } catch {
+        // best-effort only
+    }
+}
+
+seedTabHomeUrlsFromOpenTabs();
 
 function ensureTabState(tabId) {
     if (!tabNavState.has(tabId)) {
@@ -42,6 +110,8 @@ function findClosestIndex(entries, currentIndex, url) {
 
 function applyNavigationEvent(details) {
     if (details.frameId !== 0) return;
+
+    rememberTabHomeUrl(details.tabId, details.url);
 
     const state = ensureTabState(details.tabId);
     const qualifiers = details.transitionQualifiers || [];
@@ -101,6 +171,8 @@ for (const event of [
 
 browser.tabs.onRemoved.addListener((tabId) => {
     tabNavState.delete(tabId);
+    tabHomeUrl.delete(tabId);
+    removePersistedTabHomeUrl(tabId);
     pendingNewTabs.delete(tabId);
     for (const [token, entry] of capturedPdfByToken.entries()) {
         if (entry.tabId === tabId) {
@@ -139,8 +211,40 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 browser.runtime.onMessage.addListener(async (message, sender) => {
     if (message.action === "goHome") {
-        const { homepage } = await browser.storage.session.get("homepage");
-        const url = homepage || "about:home";
+        const tabId = sender.tab?.id;
+
+        let url = typeof tabId === "number" ? tabHomeUrl.get(tabId) : null;
+
+        if (!url && typeof tabId === "number") {
+            url = await getPersistedTabHomeUrl(tabId);
+            if (url) {
+                tabHomeUrl.set(tabId, url);
+            }
+        }
+
+        // If this tab currently shows the PDF wrapper and we lost in-memory state
+        // (service worker restart), recover from wrapper's `url` query parameter.
+        if (!url && typeof tabId === "number") {
+            try {
+                const tab = await browser.tabs.get(tabId);
+                if (tab.url && tab.url.startsWith(WRAPPER_PAGE)) {
+                    const wrappedUrl = new URL(tab.url).searchParams.get("url");
+                    if (isUsableHomeUrl(wrappedUrl)) {
+                        url = wrappedUrl;
+                        tabHomeUrl.set(tabId, wrappedUrl);
+                        persistTabHomeUrl(tabId, wrappedUrl);
+                    }
+                }
+            } catch {
+                // ignore and continue to fallback
+            }
+        }
+
+        if (!url) {
+            const { homepage } = await browser.storage.session.get("homepage");
+            url = homepage || "about:home";
+        }
+
         await browser.tabs.update(sender.tab.id, { url });
         return;
     }
