@@ -5,10 +5,9 @@
  * @param {string}  [options.initialUrl]           – URL shown in the bar on first render.
  *                                                   Defaults to window.location.href.
  * @param {boolean} [options.listenToNavigation]   – Whether to hook the Navigation API to
- *                                                   update state on SPA / in-page navigations.
- *                                                   Set false for static extension pages (e.g.
- *                                                   the PDF wrapper) where the page never
- *                                                   navigates itself.  Defaults to true.
+ *                                                   update the URL bar on SPA navigations.
+ *                                                   Set false for static extension pages
+ *                                                   (e.g. the PDF wrapper).  Defaults to true.
  */
 function createKioskPanel({ initialUrl = null, listenToNavigation = true } = {}) {
 
@@ -25,13 +24,6 @@ function createKioskPanel({ initialUrl = null, listenToNavigation = true } = {})
     btnBack.addEventListener("click", () => browser.runtime.sendMessage({ action: "goBack" }));
     panel.appendChild(btnBack);
 
-    // Forward button
-    const btnForward = document.createElement("button");
-    btnForward.title = "Forward";
-    btnForward.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg>`;
-    btnForward.addEventListener("click", () => browser.runtime.sendMessage({ action: "goForward" }));
-    panel.appendChild(btnForward);
-
     // Home button
     const btnHome = document.createElement("button");
     btnHome.title = "Home";
@@ -47,41 +39,65 @@ function createKioskPanel({ initialUrl = null, listenToNavigation = true } = {})
     urlBar.title = resolvedInitialUrl;
     panel.appendChild(urlBar);
 
-    // Update URL bar text and back/forward button enabled state
-    async function updateNavState(destUrl) {
-        try {
-            const state = await browser.runtime.sendMessage({ action: "getNavState" });
-            btnBack.disabled = !state?.canGoBack;
-            btnForward.disabled = !state?.canGoForward;
-        } catch {
-            btnBack.disabled = false;
-            btnForward.disabled = false;
-        }
-        if (destUrl) {
-            urlBar.textContent = destUrl;
-            urlBar.title = destUrl;
-        }
-    }
-    updateNavState();
-
-    if (listenToNavigation) {
-        navigation.addEventListener('navigate', (e) => setTimeout(() => updateNavState(e.destination.url), 0));
+    // Update URL bar on SPA / in-page navigations via the Navigation API.
+    if (listenToNavigation && typeof navigation !== "undefined") {
+        navigation.addEventListener("navigate", (e) => {
+            setTimeout(() => {
+                urlBar.textContent = e.destination.url;
+                urlBar.title = e.destination.url;
+            }, 0);
+        });
     }
 
-    // Suppress right-click context menu on the page (belt-and-suspenders with --kiosk)
-    document.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+    // Suppress right-click context menu (belt-and-suspenders with --kiosk)
+    document.addEventListener("contextmenu", (e) => e.preventDefault(), true);
 
-    // Force links that would open a new tab/window to navigate in the current tab instead.
-    // We rewrite the target attribute rather than calling preventDefault so the browser
-    // handles the navigation natively, preserving the user-activation gesture.  Without
-    // user activation, Firefox's Bounce Tracking Protection can block the navigation.
-    document.addEventListener('click', (e) => {
-        const anchor = e.target.closest('a[target]');
+    // Block keyboard shortcuts that could escape the kiosk.
+    // --kiosk already blocks most of these, but defense-in-depth.
+    const BLOCKED_SHORTCUTS = new Set([
+        "ctrl+t",       // new tab
+        "ctrl+n",       // new window
+        "ctrl+shift+n", // private window
+        "ctrl+w",       // close tab
+        "ctrl+shift+w", // close window
+        "ctrl+l",       // focus address bar
+        "ctrl+k",       // focus search bar
+        "ctrl+shift+i", // developer tools
+        "ctrl+shift+j", // browser console
+        "ctrl+shift+c", // inspector
+        "ctrl+u",       // view source
+        "f12",          // developer tools
+        "f11",          // toggle fullscreen (could exit kiosk)
+        "f6",           // focus address bar
+        "alt+home",     // Firefox home (bypass our home)
+        "alt+d",        // focus address bar
+        "alt+f4",       // close window
+    ]);
+
+    document.addEventListener("keydown", (e) => {
+        const parts = [];
+        if (e.ctrlKey || e.metaKey) parts.push("ctrl");
+        if (e.altKey) parts.push("alt");
+        if (e.shiftKey) parts.push("shift");
+        parts.push(e.key.toLowerCase());
+        const combo = parts.join("+");
+
+        if (BLOCKED_SHORTCUTS.has(combo)) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
+
+    // Force links that would open a new tab/window to navigate in the
+    // current tab instead.  We rewrite the target attribute rather than
+    // calling preventDefault so the browser handles the navigation natively,
+    // preserving the user-activation gesture (needed for Bounce Tracking
+    // Protection).
+    document.addEventListener("click", (e) => {
+        const anchor = e.target.closest("a[target]");
         if (!anchor) return;
-        const target = anchor.getAttribute('target');
-        // _self / _top / _parent already stay in the current browsing context
-        if (!target || target === '_self' || target === '_top' || target === '_parent') return;
-        anchor.setAttribute('target', '_self');
-        // Let the click continue – browser now opens in the current tab.
+        const target = anchor.getAttribute("target");
+        if (!target || target === "_self" || target === "_top" || target === "_parent") return;
+        anchor.setAttribute("target", "_self");
     }, true);
 }

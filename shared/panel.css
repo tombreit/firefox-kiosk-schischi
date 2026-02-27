@@ -44,7 +44,7 @@
 #kiosk-url-bar {
     height: 28px;
     width: fit-content;
-    max-width: calc(100vw - 160px);
+    max-width: calc(100vw - 120px);
     margin-left: 6px;
     padding: 0 10px;
     border: 1px solid #cfcfd8;

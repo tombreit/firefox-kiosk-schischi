@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Kiosk Schischi",
-  "version": "1.12",
+  "version": "1.13",
   "author": "Thomas Breitner",
-  "description": "Navigation buttons for Firefox kiosk mode",
+  "description": "Navigation buttons and kiosk lockdown for Firefox kiosk mode",
   "categories": { "firefox": ["kiosk"] },
   "requires_payment": false,
   "homepage": {
@@ -12,13 +12,11 @@
   "incognito": "spanning",
   "permissions": [
     "browserSettings",
+    "idle",
     "storage",
     "tabs",
-    "webNavigation",
     "webRequest",
-    "webRequestBlocking",
-    "webRequestFilterResponse",
-    "webRequestFilterResponse.serviceWorkerScript"
+    "webRequestBlocking"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -44,6 +42,12 @@
         "content/style.css"
       ],
       "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["wrapper/wrapper.html"],
+      "matches": ["<all_urls>"]
     }
   ],
   "browser_specific_settings": {
