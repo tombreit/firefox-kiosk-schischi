@@ -1,0 +1,62 @@
+#kiosk-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 6px;
+    background: #f0f0f4;
+    border-bottom: 1px solid #cfcfd8;
+    box-sizing: border-box;
+}
+
+#kiosk-panel button {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #1c1b22;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s, opacity 0.2s;
+}
+
+#kiosk-panel button:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+#kiosk-panel button:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+#kiosk-url-bar {
+    height: 28px;
+    width: fit-content;
+    max-width: calc(100vw - 160px);
+    margin-left: 6px;
+    padding: 0 10px;
+    border: 1px solid #cfcfd8;
+    border-radius: 4px;
+    background: #e8e8ed;
+    color: #5e5e72;
+    font-size: 13px;
+    font-family: sans-serif;
+    line-height: 28px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    user-select: none;
+    cursor: default;
+}

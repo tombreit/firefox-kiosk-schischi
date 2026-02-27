@@ -14,7 +14,9 @@
     "browserSettings",
     "storage",
     "tabs",
-    "webNavigation"
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -32,9 +34,11 @@
         "<all_urls>"
       ],
       "js": [
+        "shared/panel.js",
         "content/content.js"
       ],
       "css": [
+        "shared/panel.css",
         "content/style.css"
       ],
       "run_at": "document_end"
