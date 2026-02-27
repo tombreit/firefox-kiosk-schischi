@@ -161,6 +161,34 @@ function getTabNavState(tabId) {
     };
 }
 
+function getWrappedPdfUrl(url) {
+    if (!url || !url.startsWith(WRAPPER_PAGE)) return null;
+    try {
+        return new URL(url).searchParams.get("url");
+    } catch {
+        return null;
+    }
+}
+
+function findSmartBackTarget(state) {
+    if (!state || state.index <= 0) return null;
+    const currentUrl = state.entries[state.index];
+    const wrappedPdfUrl = getWrappedPdfUrl(currentUrl);
+
+    let targetIndex = state.index - 1;
+    while (targetIndex >= 0) {
+        const candidate = state.entries[targetIndex];
+        const isWrapper = candidate.startsWith(WRAPPER_PAGE);
+        const isWrappedPdf = wrappedPdfUrl && candidate === wrappedPdfUrl;
+        if (!isWrapper && !isWrappedPdf) {
+            return candidate;
+        }
+        targetIndex -= 1;
+    }
+
+    return null;
+}
+
 for (const event of [
     browser.webNavigation.onCommitted,
     browser.webNavigation.onHistoryStateUpdated,
@@ -250,7 +278,13 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
     }
 
     if (message.action === "goBack") {
-        await browser.tabs.goBack(sender.tab.id);
+        const state = ensureTabState(sender.tab.id);
+        const smartTarget = findSmartBackTarget(state);
+        if (smartTarget) {
+            await browser.tabs.update(sender.tab.id, { url: smartTarget });
+        } else {
+            await browser.tabs.goBack(sender.tab.id);
+        }
         return;
     }
 
@@ -352,7 +386,9 @@ browser.webRequest.onHeadersReceived.addListener(
         try {
             filter = browser.webRequest.filterResponseData(details.requestId);
         } catch {
-            return {};
+            const fallbackWrapperUrl = WRAPPER_PAGE
+                + "?url=" + encodeURIComponent(details.url);
+            return { redirectUrl: fallbackWrapperUrl };
         }
 
         const chunks = [];

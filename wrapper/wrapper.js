@@ -19,7 +19,11 @@ function showTokenError() {
 }
 
 if (!pdfToken) {
-    showTokenError();
+    if (pdfUrl) {
+        frame.src = pdfUrl;
+    } else {
+        showTokenError();
+    }
 } else {
     browser.runtime.sendMessage({ action: "getCapturedPdf", token: pdfToken })
         .then((result) => {
