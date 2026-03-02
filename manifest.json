@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Kiosk Schischi",
-  "version": "1.13",
+  "version": "1.14",
   "author": "Thomas Breitner",
   "description": "Navigation buttons and kiosk lockdown for Firefox kiosk mode",
   "categories": { "firefox": ["kiosk"] },
