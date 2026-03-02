@@ -95,9 +95,16 @@ async function seedTabHomeUrlsFromOpenTabs() {
 seedTabHomeUrlsFromOpenTabs();
 
 // Also remember the home URL whenever a tab completes a top-level navigation.
+// Also relay load state to the content script for the loading indicator.
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (changeInfo.url) {
         rememberTabHomeUrl(tabId, changeInfo.url);
+    }
+    if (changeInfo.status !== undefined) {
+        browser.tabs.sendMessage(tabId, {
+            action: "setLoading",
+            loading: changeInfo.status === "loading",
+        }).catch(() => {}); // tab may not have a content script (e.g. about:blank)
     }
 });
 

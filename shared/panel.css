@@ -12,6 +12,7 @@
     background: #f0f0f4;
     border-bottom: 1px solid #cfcfd8;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 #kiosk-panel button {
@@ -39,6 +40,30 @@
 #kiosk-panel button:disabled {
     opacity: 0.3;
     cursor: default;
+}
+
+/* Loading progress bar */
+#kiosk-progress {
+    position: absolute;
+    bottom: 0;
+    left: -30%;
+    height: 2px;
+    width: 30%;
+    background: #0060df;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 1px;
+}
+
+#kiosk-panel.kiosk-loading #kiosk-progress {
+    opacity: 1;
+    animation: kiosk-loading-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes kiosk-loading-slide {
+    0%   { left: -30%; }
+    50%  { left: 100%; }
+    100% { left: -30%; }
 }
 
 #kiosk-url-bar {

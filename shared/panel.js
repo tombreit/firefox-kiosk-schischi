@@ -39,6 +39,11 @@ function createKioskPanel({ initialUrl = null, listenToNavigation = true } = {})
     urlBar.title = resolvedInitialUrl;
     panel.appendChild(urlBar);
 
+    // Progress bar element (visibility controlled via .kiosk-loading on the panel)
+    const progressBar = document.createElement("div");
+    progressBar.id = "kiosk-progress";
+    panel.appendChild(progressBar);
+
     // Update URL bar on SPA / in-page navigations via the Navigation API.
     if (listenToNavigation && typeof navigation !== "undefined") {
         navigation.addEventListener("navigate", (e) => {
@@ -48,6 +53,19 @@ function createKioskPanel({ initialUrl = null, listenToNavigation = true } = {})
             }, 0);
         });
     }
+
+    // Show the loading indicator immediately if the page hasn't finished loading yet.
+    if (document.readyState !== "complete") {
+        panel.classList.add("kiosk-loading");
+        window.addEventListener("load", () => panel.classList.remove("kiosk-loading"), { once: true });
+    }
+
+    // Background script signals load state changes for cross-page navigations.
+    browser.runtime.onMessage.addListener((message) => {
+        if (message.action === "setLoading") {
+            panel.classList.toggle("kiosk-loading", message.loading);
+        }
+    });
 
     // Suppress right-click context menu (belt-and-suspenders with --kiosk)
     document.addEventListener("contextmenu", (e) => e.preventDefault(), true);
