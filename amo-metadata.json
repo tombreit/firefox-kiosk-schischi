@@ -17,14 +17,7 @@
   "categories": {
     "firefox": ["other"]
   },
-  "tags": [
-    "kiosk",
-    "navigation",
-    "toolbar",
-    "lockdown",
-    "public terminal",
-    "library"
-  ],
+  "tags": ["other"],
   "version": {
     "license": "MPL-2.0"
   }
