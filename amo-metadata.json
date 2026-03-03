@@ -3,13 +3,28 @@
     "en-US": "Kiosk Schischi"
   },
   "summary": {
-    "en-US": "Navigation buttons for Firefox kiosk mode"
+    "en-US": "Adds Back/Home buttons to the Firefox kiosk mode."
+  },
+  "description": {
+    "en-US": "Adds a compact navigation toolbar — **Back**, **Home** buttons, a **Loading indicator** and a read-only URL bar — to Firefox running in `--kiosk` mode.\n\nFirefox's built-in `--kiosk` flag hides all browser chrome including navigation controls. This extension restores just enough UI for users to navigate, without exposing the full browser.\n\n**Features**\n\n- Back and Home buttons, always visible\n- Read-only URL bar showing the current page address\n- PDF support — PDFs open inside a wrapper page that keeps the toolbar visible\n- Idle timeout — returns to the home page after 5 minutes of inactivity\n- New-tab suppression — links targeting new tabs are redirected into the current tab\n- Keyboard shortcut blocking (Ctrl+T, Ctrl+N, Ctrl+L, F12, and more)\n- Right-click context menu disabled\n- No settings — uses the homepage configured in Firefox preferences\n\nDesigned to work alongside a Firefox Enterprise Policy file for a complete kiosk lockdown. See the repository README for a recommended `policies.json` template."
+  },
+  "homepage": {
+    "en-US": "https://gitlab.gwdg.de/t.breitner/firefox-kiosk-schischi"
+  },
+  "support_url": {
+    "en-US": "https://gitlab.gwdg.de/t.breitner/firefox-kiosk-schischi/-/issues"
   },
   "categories": {
-    "firefox": [
-      "other"
-    ]
+    "firefox": ["other"]
   },
+  "tags": [
+    "kiosk",
+    "navigation",
+    "toolbar",
+    "lockdown",
+    "public terminal",
+    "library"
+  ],
   "version": {
     "license": "MPL-2.0"
   }
