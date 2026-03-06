@@ -16,6 +16,7 @@ for library kiosk deployments.
 - **Idle timeout** — navigates back to the home page after 5 minutes of inactivity
 - **New-tab suppression** — links that try to open new tabs/windows are redirected into
   the current tab
+- **Loading animation**
 - **Keyboard shortcut blocking** — Ctrl+T, Ctrl+N, Ctrl+L, F12, etc. are suppressed
 - **Right-click context menu suppressed**
 - No user-configurable settings — uses the homepage set in Firefox preferences
