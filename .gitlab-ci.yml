@@ -1,8 +1,6 @@
 stages:
   - build
   - sign
-  - publish
-  - deploy
 
 lint:
   stage: build
@@ -27,8 +25,19 @@ build:
 sign-xpi:
   stage: sign
   image: node:lts-slim
+  variables:
+    GIT_DEPTH: "2"
   needs: [lint]
   script:
+    - apt-get update -qq && apt-get install -y -qq jq
+    - |
+      PREV=$(git show HEAD~1:manifest.json 2>/dev/null | jq -r '.version' || echo "none")
+      CURR=$(jq -r '.version' manifest.json)
+      if [ "$PREV" = "$CURR" ]; then
+        echo "Version unchanged ($CURR) — skipping AMO submission."
+        exit 0
+      fi
+      echo "Version changed: $PREV → $CURR"
     - npm install
     - npx web-ext sign --channel=listed --amo-metadata=amo-metadata.json --api-key="$WEB_EXT_API_KEY" --api-secret="$WEB_EXT_API_SECRET" --artifacts-dir dist
     - mv dist/*.xpi dist/firefox-kiosk-schischi.xpi
@@ -37,34 +46,5 @@ sign-xpi:
     paths:
       - dist/firefox-kiosk-schischi.xpi
     expire_in: 30 days
-  only:
-    - main
-
-publish-xpi:
-  stage: publish
-  image: alpine:latest
-  needs:
-    - job: sign-xpi
-      artifacts: true
-  script:
-    - mkdir -p public
-    - cp dist/firefox-kiosk-schischi.xpi public/firefox-kiosk-schischi.xpi
-  artifacts:
-    paths:
-      - public/firefox-kiosk-schischi.xpi
-  only:
-    - main
-
-pages:
-  stage: deploy
-  image: alpine:latest
-  needs:
-    - job: publish-xpi
-      artifacts: true
-  script:
-    - cp index.html public/
-  artifacts:
-    paths:
-      - public
-  only:
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
