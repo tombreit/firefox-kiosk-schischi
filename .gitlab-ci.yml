@@ -29,7 +29,7 @@ sign-xpi:
     GIT_DEPTH: "2"
   needs: [lint]
   script:
-    - apt-get update -qq && apt-get install -y -qq jq git
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends jq git
     - |
       PREV=$(git show HEAD~1:manifest.json 2>/dev/null | jq -r '.version' || echo "none")
       CURR=$(jq -r '.version' manifest.json)
@@ -46,5 +46,6 @@ sign-xpi:
     paths:
       - dist/firefox-kiosk-schischi.xpi
     expire_in: 30 days
+    optional: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
