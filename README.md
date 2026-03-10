@@ -19,7 +19,7 @@ for library kiosk deployments.
 - **Loading animation**
 - **Keyboard shortcut blocking** — Ctrl+T, Ctrl+N, Ctrl+L, F12, etc. are suppressed
 - **Right-click context menu suppressed**
-- No user-configurable settings — uses the homepage set in Firefox preferences
+- No user-configurable settings — home button always returns to the first URL the browser saw in this session (homepage preference only used if no usable URL has ever been visited)
 
 ## Recommended `policies.json`
 
@@ -111,7 +111,7 @@ firefox-esr --kiosk https://your-catalog.example.com
 ## Architecture
 
 ```text
-background.js          – Homepage resolution, PDF interception, idle timeout,
+background.js          – Global home‑URL tracking, PDF interception, idle timeout,
                          new-tab suppression, message hub
 shared/panel.js        – createKioskPanel(): Back + Home buttons, URL bar,
                          keyboard/context-menu lockdown, link-target rewriting

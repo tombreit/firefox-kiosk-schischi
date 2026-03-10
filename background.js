@@ -2,64 +2,18 @@
 // Firefox Kiosk Schischi – background script
 //
 // Responsibilities:
-//   1. Resolve and cache the homepage URL
-//   2. Remember per-tab "home" URL (first real URL the tab visited)
-//   3. Handle goBack / goHome messages from the panel
-//   4. Intercept PDF responses → redirect to wrapper page with toolbar
-//   5. Suppress new tabs (force navigation into opener tab)
-//   6. Navigate home after idle timeout
+//   1. Resolve and cache the **global** home URL (first usable URL seen)
+//   2. Handle goBack / goHome messages from the panel
+//   3. Intercept PDF responses → redirect to wrapper page with toolbar
+//   4. Suppress new tabs (force navigation into opener tab)
+//   5. Navigate home after idle timeout
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// 1. Homepage resolution
+// 1. Global home URL tracking
 // ---------------------------------------------------------------------------
 
-async function refreshHomepage() {
-    let homepage = "about:home";
-    try {
-        const result = await browser.browserSettings.homepageOverride.get({});
-        homepage = result.value || "about:home";
-    } catch {
-        // homepageOverride unavailable, keeping default
-    }
-    await browser.storage.session.set({ homepage });
-}
-
-refreshHomepage();
-
-// ---------------------------------------------------------------------------
-// 2. Per-tab home URL tracking
-// ---------------------------------------------------------------------------
-
-const tabHomeUrl = new Map(); // tabId -> first real URL the tab visited
-const TAB_HOME_KEY_PREFIX = "tabHomeUrl:";
-
-function tabHomeStorageKey(tabId) {
-    return `${TAB_HOME_KEY_PREFIX}${tabId}`;
-}
-
-async function persistTabHomeUrl(tabId, url) {
-    try {
-        await browser.storage.session.set({ [tabHomeStorageKey(tabId)]: url });
-    } catch { /* best-effort */ }
-}
-
-async function removePersistedTabHomeUrl(tabId) {
-    try {
-        await browser.storage.session.remove(tabHomeStorageKey(tabId));
-    } catch { /* best-effort */ }
-}
-
-async function getPersistedTabHomeUrl(tabId) {
-    try {
-        const key = tabHomeStorageKey(tabId);
-        const result = await browser.storage.session.get(key);
-        const url = result[key];
-        return isUsableHomeUrl(url) ? url : null;
-    } catch {
-        return null;
-    }
-}
+let globalHomeUrl = null; // first usable URL seen by any tab
 
 function isUsableHomeUrl(url) {
     if (!url) return false;
@@ -74,31 +28,66 @@ function isUsableHomeUrl(url) {
     );
 }
 
-function rememberTabHomeUrl(tabId, url) {
-    if (tabId < 0) return;
-    if (tabHomeUrl.has(tabId)) return;
-    if (!isUsableHomeUrl(url)) return;
-    tabHomeUrl.set(tabId, url);
-    persistTabHomeUrl(tabId, url);
+async function loadGlobalHomeUrl() {
+    try {
+        const result = await browser.storage.session.get("globalHomeUrl");
+        const url = result.globalHomeUrl;
+        if (isUsableHomeUrl(url)) {
+            globalHomeUrl = url;
+        }
+    } catch {
+        // ignore
+    }
 }
 
-async function seedTabHomeUrlsFromOpenTabs() {
+async function setGlobalHomeUrl(url) {
+    if (!isUsableHomeUrl(url)) return;
+    if (globalHomeUrl) return; // already set
+    globalHomeUrl = url;
+    try {
+        await browser.storage.session.set({ globalHomeUrl: url });
+    } catch {
+        /* best-effort */
+    }
+}
+
+async function seedGlobalHomeUrlFromOpenTabs() {
     try {
         const tabs = await browser.tabs.query({});
         for (const tab of tabs) {
             if (typeof tab.id !== "number") continue;
-            rememberTabHomeUrl(tab.id, tab.url);
+            await setGlobalHomeUrl(tab.url);
+            if (globalHomeUrl) break;
         }
-    } catch { /* best-effort */ }
+    } catch {
+        /* best-effort */
+    }
 }
 
-seedTabHomeUrlsFromOpenTabs();
+// initialise from storage and open tabs
+loadGlobalHomeUrl().then(seedGlobalHomeUrlFromOpenTabs);
 
-// Also remember the home URL whenever a tab completes a top-level navigation.
-// Also relay load state to the content script for the loading indicator.
+
+// NOTE: per-tab home tracking has been removed in favor of a global value.
+// The only URL we ever care about is the first usable URL seen anywhere.
+
+// also relay load state to the content script for the loading indicator.
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (changeInfo.url) {
-        rememberTabHomeUrl(tabId, changeInfo.url);
+        const u = changeInfo.url;
+        if (!globalHomeUrl) {
+            if (u.startsWith(WRAPPER_PAGE)) {
+                // unwrap PDF wrapper and use the original PDF URL as home
+                try {
+                    const wrapped = new URL(u).searchParams.get("url");
+                    if (isUsableHomeUrl(wrapped)) {
+                        setGlobalHomeUrl(wrapped);
+                    }
+                } catch {} // ignore malformed
+            } else {
+                setGlobalHomeUrl(u);
+            }
+        }
     }
     if (changeInfo.status !== undefined) {
         browser.tabs.sendMessage(tabId, {
@@ -193,8 +182,6 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
 // ---------------------------------------------------------------------------
 
 browser.tabs.onRemoved.addListener((tabId) => {
-    tabHomeUrl.delete(tabId);
-    removePersistedTabHomeUrl(tabId);
     pendingNewTabs.delete(tabId);
 });
 
@@ -203,37 +190,33 @@ browser.tabs.onRemoved.addListener((tabId) => {
 // ---------------------------------------------------------------------------
 
 async function resolveHomeUrl(tabId) {
-    // 1. In-memory per-tab home URL
-    let url = typeof tabId === "number" ? tabHomeUrl.get(tabId) : null;
-
-    // 2. Persisted per-tab home URL (survives background restart)
-    if (!url && typeof tabId === "number") {
-        url = await getPersistedTabHomeUrl(tabId);
-        if (url) tabHomeUrl.set(tabId, url);
+    // 1. Global URL if already known
+    if (globalHomeUrl) {
+        return globalHomeUrl;
     }
 
-    // 3. If currently on the PDF wrapper, recover from query parameter
-    if (!url && typeof tabId === "number") {
+    // 2. If currently on the PDF wrapper and we haven't seen any URL yet,
+    //    use the wrapped URL as the home target.
+    if (typeof tabId === "number") {
         try {
             const tab = await browser.tabs.get(tabId);
             if (tab.url && tab.url.startsWith(WRAPPER_PAGE)) {
                 const wrappedUrl = new URL(tab.url).searchParams.get("url");
                 if (isUsableHomeUrl(wrappedUrl)) {
-                    url = wrappedUrl;
-                    tabHomeUrl.set(tabId, wrappedUrl);
-                    persistTabHomeUrl(tabId, wrappedUrl);
+                    await setGlobalHomeUrl(wrappedUrl);
+                    return wrappedUrl;
                 }
             }
         } catch { /* ignore */ }
     }
 
-    // 4. Global homepage fallback
-    if (!url) {
-        const { homepage } = await browser.storage.session.get("homepage");
-        url = homepage || "about:home";
+    // 3. Fallback to the configured homepage preference.
+    try {
+        const result = await browser.browserSettings.homepageOverride.get({});
+        return result.value || "about:home";
+    } catch {
+        return "about:home";
     }
-
-    return url;
 }
 
 browser.runtime.onMessage.addListener(async (message, sender) => {
