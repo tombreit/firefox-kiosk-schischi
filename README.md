@@ -1,4 +1,4 @@
-# Firefox Kiosk Schischi
+# <img src="icons/icon.svg" style="height:2em; vertical-align:middle;" alt="icon"> Firefox Kiosk Schischi
 
 A Firefox extension that adds a minimal navigation toolbar (Back, Home) and kiosk
 lockdown features to Firefox running in `--kiosk` mode.
