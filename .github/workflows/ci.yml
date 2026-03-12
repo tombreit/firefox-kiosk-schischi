@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm install
+      - run: npx web-ext lint
+
+  build:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm install
+      - run: npx web-ext build --artifacts-dir dist --filename firefox-kiosk-schischi.xpi
+
+  sign-xpi:
+    needs: [lint]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Check version bump
+        run: |
+          PREV=$(git show HEAD~1:manifest.json 2>/dev/null | jq -r '.version' || echo "none")
+          CURR=$(jq -r '.version' manifest.json)
+          if [ "$PREV" = "$CURR" ]; then
+            echo "Version unchanged ($CURR) — skipping AMO submission."
+            echo "SKIP_SIGN=true" >> "$GITHUB_ENV"
+          else
+            echo "Version changed: $PREV → $CURR"
+          fi
+      - name: Sign extension
+        if: env.SKIP_SIGN != 'true'
+        run: |
+          npm install
+          npx web-ext sign --channel=listed --amo-metadata=amo-metadata.json \
+            --api-key="${{ secrets.WEB_EXT_API_KEY }}" \
+            --api-secret="${{ secrets.WEB_EXT_API_SECRET }}" \
+            --artifacts-dir dist
+          mv dist/*.xpi dist/firefox-kiosk-schischi.xpi

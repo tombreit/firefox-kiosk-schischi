@@ -132,26 +132,17 @@ iframe with the kiosk toolbar above it.
 
 ## CI/CD
 
-The GitLab CI pipeline (`.gitlab-ci.yml`) has four stages:
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request:
 
-1. **build** — lints and builds an unsigned `.xpi` as a downloadable artifact on every push
-2. **sign** — signs the extension via Mozilla's AMO API using `web-ext` (`main` branch only)
-3. **publish** — copies the signed `.xpi` to the `public/` directory
-4. **deploy** — publishes to GitLab Pages (`main` branch only)
+- **lint** — validates the extension on every push/PR
+- **build** — builds an unsigned `.xpi` (after lint)
+- **sign-xpi** — signs and submits to AMO via `web-ext sign` (`main` branch only, skipped if the version in `manifest.json` hasn't changed)
 
-The signing step requires two CI/CD variables to be set in GitLab
-(**Settings → CI/CD → Variables**, mark both as masked):
+The sign job requires two secrets in **Settings → Secrets and variables → Actions**:
 
-| Variable | Description |
+| Secret | Description |
 | --- | --- |
 | `WEB_EXT_API_KEY` | JWT issuer from [addons.mozilla.org API credentials](https://addons.mozilla.org/developers/addon/api/key/) |
 | `WEB_EXT_API_SECRET` | JWT secret from the same page |
 
-For listed AMO submissions, CI passes `amo-metadata.json` to `web-ext sign`.
-That file currently sets `version.license` to `MPL-2.0`, which avoids AMO API
-errors like "version.license is required".
-
-When `main` is built, CI publishes the signed `firefox-kiosk-schischi.xpi`.
-
-You need to bump `manifest.json` version manually before each new AMO signing
-submission, because AMO rejects duplicate versions.
+Bump the version in `manifest.json` before merging to `main` to trigger a new AMO submission.

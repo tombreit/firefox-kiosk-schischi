@@ -1,6 +1,7 @@
 export default {
   ignoreFiles: [
     "README.md",
+    ".github",
     ".gitlab-ci.yml",
     ".web-ext-config.mjs",
     "public",
