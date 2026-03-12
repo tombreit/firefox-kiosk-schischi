@@ -7,6 +7,8 @@ Firefox's built-in `--kiosk` flag locks down the UI but removes all navigation c
 This extension re-adds a compact top toolbar and provides additional lockdown hardening
 for library kiosk deployments.
 
+![kiosk-schischi screenshot](screenshots/kiosk-schischi.png)
+
 ## Features
 
 - **Back / Home buttons**, always visible and enabled
